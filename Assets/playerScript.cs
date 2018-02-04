@@ -5,25 +5,25 @@ using UnityEngine;
 
 public class playerScript : MonoBehaviour {
     //  Player Movement Variables
-    public float playerMoveSpeed = 6;
-    public float playerJumpSpeed = 18;
-    float playerClimbSpeed = 0.02f;
+    [SerializeField] float playerMoveSpeed = 6;
+    [SerializeField] float playerJumpSpeed = 18;
+    [SerializeField] float playerClimbSpeed = 0.02f;
     
     // Player State variables
     bool facingRight = true;
-    public bool facingLadder = false;
-    public bool isClimbing = false;
+    [SerializeField] bool facingLadder = false;
+    [SerializeField] bool isClimbing = false;
     
     // Access to Unity Components
     private SpriteRenderer spriteRenderer;
-    public Rigidbody2D rigidBody;
+    private Rigidbody2D rigidBody;
     private Animator animator;
-    
+
     // Player on Ground Variables
-    public Transform groundCheck;
-    public float groundCheckRadius = 0.09f;
-    public LayerMask whatIsGround;
-    public bool isGrounded;
+    [SerializeField] Transform groundCheck;
+    [SerializeField] float groundCheckRadius = 0.09f;
+    [SerializeField] LayerMask whatIsGround;
+    [SerializeField] bool isGrounded;
 
     // Player State
     enum CurrentPlayerState { alive,dead,climbing}
@@ -48,7 +48,8 @@ public class playerScript : MonoBehaviour {
 	void Update ()
     {
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, whatIsGround);
-
+        setAnimatorState();
+        handleInput();
     }
 
 
@@ -64,7 +65,7 @@ public class playerScript : MonoBehaviour {
 
 
         handleInput();
-        setAnimatorState();
+        
     }
     private void handleInput()
     {
@@ -152,6 +153,7 @@ public class playerScript : MonoBehaviour {
                 if (facingLadder == true)
                 {
                     currentPlayerState = CurrentPlayerState.climbing;
+                    setAnimatorState();
                 }
                 break;
             case CurrentPlayerState.climbing:
@@ -162,9 +164,11 @@ public class playerScript : MonoBehaviour {
                 break;
             default:
                 break;
+                
 
 
         }
+        setAnimatorState();
     }
 
     private void playerClimbDown()
