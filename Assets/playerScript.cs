@@ -8,7 +8,9 @@ public class playerScript : MonoBehaviour {
     [SerializeField] float playerMoveSpeed = 6;
     [SerializeField] float playerJumpSpeed = 18;
     [SerializeField] float playerClimbSpeed = 0.02f;
-    
+    float horizontalMovement;
+    float verticalMovement;
+
     // Player State variables
     bool facingRight = true;
     [SerializeField] bool facingLadder = false;
@@ -69,81 +71,38 @@ public class playerScript : MonoBehaviour {
     }
     private void handleInput()
     {
-        if (Input.GetKey(KeyCode.RightArrow))
-        {
-            playerMoveRight();
-        }
-        if (Input.GetKey(KeyCode.LeftArrow))
-        {
-            playerMoveLeft();
-        }
-        
-        if (Input.GetKey(KeyCode.UpArrow))
-        {
+        // Get Input Axis
+        horizontalMovement = Input.GetAxis("Horizontal");
+        verticalMovement = Input.GetAxis("Vertical");
+        // Horizontal Move
+        playerMoveHorizontal(horizontalMovement);
+
+
+
+
+        if (verticalMovement > 0)
+            {
             playerClimbUp();
         }
-        if (Input.GetKey(KeyCode.DownArrow))
+        else if (verticalMovement < 0)
         {
             playerClimbDown();
         }
-        if (Input.GetKey(KeyCode.Space)&& (isGrounded == true))
+        if (Input.GetKeyDown(KeyCode.Space)&& (isGrounded == true))
         {
             PlayerJump();
         }
     }
 
-    private void setAnimatorState()
+
+    private void playerMoveHorizontal(float horizontalMovement)
     {
-        animator.SetBool("isGrounded", isGrounded);
-        animator.SetFloat("moveSpeed", Mathf.Abs(rigidBody.velocity.x));
-        
-        if (currentPlayerState == CurrentPlayerState.climbing)
-        {
-            //rigidBody.velocity = new Vector3(0, 0, 0);
-            animator.SetBool("isClimbing", true);
-            Debug.Log("climbing");
-        }
-        else if (currentPlayerState == CurrentPlayerState.alive)
-        {
-            animator.SetBool("isClimbing", false);
-        }
+        // Check direction player is facing and flip accordingly
+        checkAndFlipPlayer(horizontalMovement);
+        // accelerate the player in the direction given in horizontalMovement
+        rigidBody.velocity = new Vector2(horizontalMovement * playerMoveSpeed, rigidBody.velocity.y);
     }
 
-    private void PlayerJump()
-    {
-        rigidBody.velocity = new Vector3(rigidBody.velocity.x, playerJumpSpeed, 0);
-    }
-
-    private void playerMoveRight()
-    {
-    if (isClimbing == false)
-        {
-            if (facingRight == true)
-            {
-            rigidBody.velocity = new Vector3(playerMoveSpeed, rigidBody.velocity.y, 0);
-            }
-            else
-            {
-                spriteRenderer.flipX = true;
-                rigidBody.velocity = new Vector3(playerMoveSpeed, rigidBody.velocity.y, 0);
-                facingRight = true;
-            }
-        }
-    }
-    private void playerMoveLeft()
-    {
-        if (facingRight == true)
-        {
-            spriteRenderer.flipX = false;
-            rigidBody.velocity = new Vector3(-playerMoveSpeed, rigidBody.velocity.y, 0);
-            facingRight = false;
-        }
-        else
-        {
-            rigidBody.velocity = new Vector3(-playerMoveSpeed, rigidBody.velocity.y, 0);
-        }
-
-    }
     private void playerClimbUp()
     {
 
@@ -160,11 +119,11 @@ public class playerScript : MonoBehaviour {
                 rigidBody.gravityScale = 0;
                 playerPosition = transform.position;
                 //transform.position = new Vector3(playerPosition.x, playerPosition.y+0.02f,0);
-                transform.position = new Vector3(2.1f, playerPosition.y +playerClimbSpeed, 0);
+                transform.position = new Vector3(2.1f, playerPosition.y + playerClimbSpeed, 0);
                 break;
             default:
                 break;
-                
+
 
 
         }
@@ -176,15 +135,10 @@ public class playerScript : MonoBehaviour {
         switch (currentPlayerState)
         {
             case CurrentPlayerState.climbing:
-               // if (facingLadder == true && isGrounded == true)
-               // {
-                  //  currentPlayerState = CurrentPlayerState.alive;
-                  //  rigidBody.gravityScale = 5;
-               // }
                 if (facingLadder == true)
                 {
                     playerPosition = transform.position;
-                   
+
                     transform.position = new Vector3(2.1f, playerPosition.y - playerClimbSpeed, 0);
                 }
                 break;
@@ -199,6 +153,44 @@ public class playerScript : MonoBehaviour {
         }
 
     }
+
+    private void PlayerJump()
+    {
+        rigidBody.velocity = new Vector2(rigidBody.velocity.x, playerJumpSpeed);
+    }
+
+    private void setAnimatorState()
+    {
+        animator.SetBool("isGrounded", isGrounded);
+        animator.SetFloat("moveSpeed", Mathf.Abs(rigidBody.velocity.x));
+        
+        if (currentPlayerState == CurrentPlayerState.climbing)
+        {
+            animator.SetBool("isClimbing", true);
+            Debug.Log("climbing");
+        }
+        else if (currentPlayerState == CurrentPlayerState.alive)
+        {
+            animator.SetBool("isClimbing", false);
+        }
+    }
+
+
+
+    private void checkAndFlipPlayer (float horizontalMovement)
+    {
+        if (horizontalMovement < 0 && facingRight == true)
+        {
+            spriteRenderer.flipX = false;
+            facingRight = false;
+        }
+        else if (horizontalMovement > 0 && facingRight == false)
+        {
+            spriteRenderer.flipX = true;
+            facingRight = true;
+        }
+    }
+   
 
     void OnTriggerEnter2D(Collider2D other)
     {
