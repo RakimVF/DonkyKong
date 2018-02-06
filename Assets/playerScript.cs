@@ -15,7 +15,8 @@ public class playerScript : MonoBehaviour {
     bool facingRight = true;
     [SerializeField] bool facingLadder = false;
     [SerializeField] bool isClimbing = false;
-    
+    [SerializeField] bool upperCollider = false;
+
     // Access to Unity Components
     private SpriteRenderer spriteRenderer;
     private Rigidbody2D rigidBody;
@@ -23,7 +24,7 @@ public class playerScript : MonoBehaviour {
 
     // Player on Ground Variables
     [SerializeField] Transform groundCheck;
-    [SerializeField] float groundCheckRadius = 0.09f;
+    [SerializeField] float groundCheckRadius = 0.05f;
     [SerializeField] LayerMask whatIsGround;
     [SerializeField] bool isGrounded;
 
@@ -76,18 +77,12 @@ public class playerScript : MonoBehaviour {
         verticalMovement = Input.GetAxis("Vertical");
         // Horizontal Move
         playerMoveHorizontal(horizontalMovement);
+        // Vertical Move / Climbing
+        playerMoveVertical(verticalMovement);
 
 
 
 
-        if (verticalMovement > 0)
-            {
-            playerClimbUp();
-        }
-        else if (verticalMovement < 0)
-        {
-            playerClimbDown();
-        }
         if (Input.GetKeyDown(KeyCode.Space)&& (isGrounded == true))
         {
             PlayerJump();
@@ -97,61 +92,30 @@ public class playerScript : MonoBehaviour {
 
     private void playerMoveHorizontal(float horizontalMovement)
     {
-        // Check direction player is facing and flip accordingly
-        checkAndFlipPlayer(horizontalMovement);
-        // accelerate the player in the direction given in horizontalMovement
-        rigidBody.velocity = new Vector2(horizontalMovement * playerMoveSpeed, rigidBody.velocity.y);
+        
+        if (isClimbing == false)
+        { 
+            // Check direction player is facing and flip accordingly
+            checkAndFlipPlayer(horizontalMovement);
+            // accelerate the player in the direction given in horizontalMovement
+            rigidBody.velocity = new Vector2(horizontalMovement * playerMoveSpeed, rigidBody.velocity.y);
+        }
     }
 
-    private void playerClimbUp()
+   private void playerMoveVertical (float verticalMovement)
     {
-
-        switch (currentPlayerState)
+        Vector2 pos = transform.position;
+        if (isClimbing == false && verticalMovement >0 && facingLadder == true)
         {
-            case CurrentPlayerState.alive:
-                if (facingLadder == true)
-                {
-                    currentPlayerState = CurrentPlayerState.climbing;
-                    setAnimatorState();
-                }
-                break;
-            case CurrentPlayerState.climbing:
-                rigidBody.gravityScale = 0;
-                playerPosition = transform.position;
-                //transform.position = new Vector3(playerPosition.x, playerPosition.y+0.02f,0);
-                transform.position = new Vector3(2.1f, playerPosition.y + playerClimbSpeed, 0);
-                break;
-            default:
-                break;
-
-
-
+            
+            isClimbing = true;
+            rigidBody.velocity = new Vector2(0f, verticalMovement + 1f);
+            isGrounded = false; 
         }
-        setAnimatorState();
-    }
-
-    private void playerClimbDown()
-    {
-        switch (currentPlayerState)
+        else if (isClimbing == true )
         {
-            case CurrentPlayerState.climbing:
-                if (facingLadder == true)
-                {
-                    playerPosition = transform.position;
-
-                    transform.position = new Vector3(2.1f, playerPosition.y - playerClimbSpeed, 0);
-                }
-                break;
-            default:
-                if (facingLadder == true)
-                {
-                    playerPosition = transform.position;
-
-                    transform.position = new Vector3(2.1f, playerPosition.y - playerClimbSpeed, 0);
-                }
-                break;
+            rigidBody.velocity = new Vector2(0f, verticalMovement + 1f);
         }
-
     }
 
     private void PlayerJump()
@@ -201,11 +165,12 @@ public class playerScript : MonoBehaviour {
         }
         if (other.gameObject.tag == "upperLadder")
         {
-            //animator.Play("playerMovingOffLadder");
+            upperCollider = true;
             if (currentPlayerState == CurrentPlayerState.climbing)
             {
                 currentPlayerState = CurrentPlayerState.alive;  
                 rigidBody.gravityScale = 5;
+                
             }
 
 
@@ -213,15 +178,22 @@ public class playerScript : MonoBehaviour {
         currentPlayerState = CurrentPlayerState.alive;
         rigidBody.gravityScale = 5;
         setAnimatorState();
+        
     }
 
     void OnTriggerExit2D(Collider2D other)
     {
         if (other.gameObject.tag == "Ladder")
         {
+            isClimbing = false;
             facingLadder = false;
             rigidBody.gravityScale = 5;
             currentPlayerState = CurrentPlayerState.alive;
+
+        }
+        if (other.gameObject.tag == "upperLadder")
+        {
+            upperCollider = false;
 
         }
     }
