@@ -33,7 +33,8 @@ public class playerScript : MonoBehaviour {
     CurrentPlayerState currentPlayerState;
 
     // Pixel perfect Ladder Movement
-    Vector2 playerPosition; 
+    Vector2 playerPosition;
+   
 
 
     // Use this for initialization
@@ -93,7 +94,7 @@ public class playerScript : MonoBehaviour {
     private void playerMoveHorizontal(float horizontalMovement)
     {
         
-        if (isClimbing == false)
+        if (currentPlayerState != CurrentPlayerState.climbing)
         { 
             // Check direction player is facing and flip accordingly
             checkAndFlipPlayer(horizontalMovement);
@@ -105,16 +106,19 @@ public class playerScript : MonoBehaviour {
    private void playerMoveVertical (float verticalMovement)
     {
         Vector2 pos = transform.position;
-        if (isClimbing == false && verticalMovement >0 && facingLadder == true)
+        if (currentPlayerState != CurrentPlayerState.climbing && verticalMovement >0 && facingLadder == true)
         {
-            
-            isClimbing = true;
+
+            currentPlayerState = CurrentPlayerState.climbing;
             rigidBody.velocity = new Vector2(0f, verticalMovement + 1f);
             isGrounded = false; 
         }
-        else if (isClimbing == true )
+
+
+
+        else if (currentPlayerState == CurrentPlayerState.climbing)
         {
-            rigidBody.velocity = new Vector2(0f, verticalMovement + 1f);
+        rigidBody.velocity = new Vector2(0f, verticalMovement + 1f);
         }
     }
 
